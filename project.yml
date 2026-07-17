@@ -1,0 +1,111 @@
+name: PDFViewer
+options:
+  bundleIdPrefix: com.brueggemann.pdfviewer
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  usesTabs: false
+  indentWidth: 4
+  tabWidth: 4
+
+configs:
+  Debug: debug
+  Release: release
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    ENABLE_HARDENED_RUNTIME: YES
+    GENERATE_INFOPLIST_FILE: YES
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    INFOPLIST_KEY_NSHumanReadableCopyright: "© 2026"
+    INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.productivity"
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: "$(PDFVIEWER_DEVELOPMENT_TEAM)"
+    OTHER_CODE_SIGN_FLAGS: "--timestamp"
+
+targets:
+  PDFViewer:
+    type: application
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: PDFViewer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.brueggemann.pdfviewer
+        PRODUCT_NAME: PDFViewer
+        CODE_SIGN_ENTITLEMENTS: PDFViewer/Resources/PDFViewer.entitlements
+        ENABLE_APP_SANDBOX: YES
+    info:
+      path: Generated-Info.plist
+      properties:
+        CFBundleDisplayName: PDF Viewer
+        NSPrincipalClass: NSApplication
+        LSMinimumSystemVersion: "26.0"
+        NSSupportsAutomaticTermination: true
+        NSSupportsSuddenTermination: true
+        ITSAppUsesNonExemptEncryption: false
+        NSHighResolutionCapable: true
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: PDF Document
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - com.adobe.pdf
+        UTImportedTypeDeclarations: []
+    entitlements:
+      path: PDFViewer/Resources/PDFViewer.entitlements
+
+  PDFViewerTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: PDFViewerTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.brueggemann.pdfviewer.tests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: PDFViewer
+
+  PDFViewerUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: PDFViewerUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.brueggemann.pdfviewer.uitests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: PDFViewer
+
+schemes:
+  PDFViewer:
+    build:
+      targets:
+        PDFViewer: [run, test, profile, analyze, archive]
+        PDFViewerTests: [test]
+        PDFViewerUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - PDFViewerTests
+        - PDFViewerUITests
+    profile:
+      config: Release
+    archive:
+      config: Release
