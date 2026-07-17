@@ -64,6 +64,17 @@ targets:
         UTImportedTypeDeclarations: []
     entitlements:
       path: PDFViewer/Resources/PDFViewer.entitlements
+      properties:
+        # App Sandbox is required for Mac App Store distribution and is good practice
+        # regardless of distribution channel.
+        com.apple.security.app-sandbox: true
+        # Grants access only to files the user explicitly picks: the Open panel,
+        # drag-and-drop, double-click/"Open With" in Finder, and the Open Recent menu.
+        # "read-write" is required because "Save a Copy" writes a new file to a
+        # user-picked location; the original opened file is never written to.
+        com.apple.security.files.user-selected.read-write: true
+        # Required for the native print dialog (File > Print / ⌘P).
+        com.apple.security.print: true
 
   PDFViewerTests:
     type: bundle.unit-test

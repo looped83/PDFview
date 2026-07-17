@@ -211,8 +211,8 @@ final class PDFDocumentState {
     // MARK: - Printing & export
 
     func printDocument() {
-        guard let pdfView else { return }
-        guard let operation = pdfView.printOperation(
+        guard let pdfView, let document = pdfView.document else { return }
+        guard let operation = document.printOperation(
             for: .shared,
             scalingMode: .pageScaleDownToFit,
             autoRotate: true
