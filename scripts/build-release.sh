@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# build-release.sh — clean Release build of PDF Viewer, producing dist/PDFViewer.app.
+# build-release.sh — clean Release build of PDF Viewer, producing dist/PDF Viewer.app.
 #
 # Usage:
 #   scripts/build-release.sh
@@ -61,11 +61,11 @@ else
   xcodebuild "${XCODEBUILD_ARGS[@]}"
 fi
 
-APP_PATH="${BUILD_DIR}/Build/Products/${CONFIGURATION}/PDFViewer.app"
+APP_PATH="${BUILD_DIR}/Build/Products/${CONFIGURATION}/PDF Viewer.app"
 
 [ -d "${APP_PATH}" ] || fail "Expected build product not found at ${APP_PATH}."
 
-log "Copying PDFViewer.app to ${DIST_DIR}"
-cp -R "${APP_PATH}" "${DIST_DIR}/PDFViewer.app"
+log "Copying PDF Viewer.app to ${DIST_DIR}"
+cp -R "${APP_PATH}" "${DIST_DIR}/PDF Viewer.app"
 
-log "Build succeeded: ${DIST_DIR}/PDFViewer.app"
+log "Build succeeded: ${DIST_DIR}/PDF Viewer.app"

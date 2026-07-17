@@ -35,6 +35,12 @@ struct AppCommands: Commands {
             .keyboardShortcut("s", modifiers: [.command, .shift])
             .disabled(documentState == nil)
 
+            Button("Optimiert exportieren…") {
+                documentState?.exportOptimizedPDF()
+            }
+            .keyboardShortcut("e", modifiers: [.command, .shift])
+            .disabled(!(documentState?.canExportOptimized ?? false))
+
             Button("Im Finder anzeigen") {
                 documentState?.revealInFinder()
             }

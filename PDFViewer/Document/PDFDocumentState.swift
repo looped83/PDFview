@@ -37,6 +37,11 @@ final class PDFDocumentState {
     var passwordAttemptFailed: Bool = false
 
     var saveCopyErrorMessage: String?
+    var exportErrorMessage: String?
+    var exportInfoMessage: String?
+    var isExporting: Bool = false
+    var isExportOptionsPresented: Bool = false
+    var exportSettings = PDFExportSettings()
 
     private(set) var navigationHistory = NavigationHistory()
     private var hasRestoredPosition = false
@@ -211,8 +216,8 @@ final class PDFDocumentState {
     // MARK: - Printing & export
 
     func printDocument() {
-        guard let pdfView else { return }
-        guard let operation = pdfView.printOperation(
+        guard let pdfView, let document = pdfView.document else { return }
+        guard let operation = document.printOperation(
             for: .shared,
             scalingMode: .pageScaleDownToFit,
             autoRotate: true
@@ -243,6 +248,88 @@ final class PDFDocumentState {
                     localized: "Die Kopie konnte nicht gespeichert werden."
                 )
             }
+        }
+    }
+
+    /// Whether an optimized export is currently possible (a viewable document is loaded).
+    var canExportOptimized: Bool {
+        !isExporting && (pdfView?.document ?? fileDocument.pdfDocument) != nil
+    }
+
+    /// Entry point for the toolbar/menu: opens the export-options sheet where the user picks
+    /// the method (preserve text vs. rasterize) and compression strength before saving.
+    func exportOptimizedPDF() {
+        guard canExportOptimized else { return }
+        isExportOptionsPresented = true
+    }
+
+    /// Called by the options sheet once the user confirms: prompts for a destination, then
+    /// exports with the chosen `exportSettings` in the background (see `PDFCompressionService`).
+    func confirmOptimizedExport() {
+        isExportOptionsPresented = false
+        guard canExportOptimized else { return }
+
+        let panel = NSSavePanel()
+        let baseName = fileURL?.deletingPathExtension().lastPathComponent
+            ?? String(localized: "Dokument")
+        panel.nameFieldStringValue = String(localized: "\(baseName) (komprimiert).pdf")
+        panel.allowedContentTypes = [.pdf]
+        panel.canCreateDirectories = true
+        panel.begin { [weak self] response in
+            guard let self, response == .OK, let destination = panel.url else { return }
+            self.runOptimizedExport(to: destination)
+        }
+    }
+
+    private func runOptimizedExport(to destination: URL) {
+        // Prefer the original file's bytes as the compression source (best quality input).
+        // For originally-encrypted documents those bytes are unreadable without the password,
+        // so fall back to the already-unlocked in-memory document's data.
+        let wasEncrypted = pdfView?.document?.isEncrypted ?? false
+        let sourceData: Data?
+        if let fileURL, !wasEncrypted {
+            sourceData = try? Data(contentsOf: fileURL)
+        } else {
+            sourceData = (pdfView?.document ?? fileDocument.pdfDocument)?.dataRepresentation()
+        }
+
+        guard let sourceData else {
+            exportErrorMessage = String(localized: "Der optimierte Export ist fehlgeschlagen.")
+            return
+        }
+
+        isExporting = true
+        let settings = exportSettings
+        Task.detached(priority: .userInitiated) { [weak self] in
+            do {
+                let result = try PDFCompressionService.writeOptimizedPDF(sourceData: sourceData, to: destination, settings: settings)
+                await MainActor.run {
+                    self?.isExporting = false
+                    self?.exportInfoMessage = Self.message(for: result)
+                }
+            } catch {
+                await MainActor.run {
+                    self?.isExporting = false
+                    self?.exportErrorMessage = String(
+                        localized: "Der optimierte Export ist fehlgeschlagen."
+                    )
+                }
+            }
+        }
+    }
+
+    private static func message(for result: PDFCompressionService.Result) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        switch result {
+        case let .compressed(originalBytes, optimizedBytes):
+            let percent = Int((1 - Double(optimizedBytes) / Double(originalBytes)) * 100)
+            let from = formatter.string(fromByteCount: Int64(originalBytes))
+            let to = formatter.string(fromByteCount: Int64(optimizedBytes))
+            return String(localized: "Exportiert: \(from) → \(to) (\(percent) % kleiner).")
+        case let .alreadyOptimal(bytes):
+            let size = formatter.string(fromByteCount: Int64(bytes))
+            return String(localized: "Diese PDF war bereits optimal komprimiert (\(size)); das Original wurde unverändert exportiert.")
         }
     }
 

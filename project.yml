@@ -1,4 +1,9 @@
 name: PDFViewer
+# Marks the project as reviewed for the current Xcode toolchain. XcodeGen otherwise
+# defaults LastUpgradeCheck to 1430, which makes Xcode show "Update to recommended
+# settings".
+attributes:
+  LastUpgradeCheck: "2660"
 options:
   bundleIdPrefix: com.brueggemann.pdfviewer
   deploymentTarget:
@@ -42,19 +47,34 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.brueggemann.pdfviewer
-        PRODUCT_NAME: PDFViewer
+        # The built bundle is "PDF Viewer.app". PRODUCT_MODULE_NAME is pinned to the
+        # space-free "PDFViewer" so the Swift module name stays valid and the tests'
+        # `@testable import PDFViewer` keeps working.
+        PRODUCT_NAME: PDF Viewer
+        PRODUCT_MODULE_NAME: PDFViewer
         CODE_SIGN_ENTITLEMENTS: PDFViewer/Resources/PDFViewer.entitlements
         ENABLE_APP_SANDBOX: YES
+        # Use the generated Info.plist as-is. With generation on, Xcode forces
+        # CFBundleName to $(PRODUCT_NAME), overriding the values set below.
+        GENERATE_INFOPLIST_FILE: NO
     info:
       path: Generated-Info.plist
       properties:
         CFBundleDisplayName: PDF Viewer
+        CFBundleName: PDF Viewer
         NSPrincipalClass: NSApplication
         LSMinimumSystemVersion: "26.0"
         NSSupportsAutomaticTermination: true
         NSSupportsSuddenTermination: true
         ITSAppUsesNonExemptEncryption: false
         NSHighResolutionCapable: true
+        # Kept in the plist because Info.plist generation (which would otherwise inject
+        # these from the INFOPLIST_KEY_* build settings) is disabled for this target.
+        LSApplicationCategoryType: public.app-category.productivity
+        NSHumanReadableCopyright: "© 2026"
+        # Links the app to the "AppIcon" set in the asset catalog. Normally injected from
+        # ASSETCATALOG_COMPILER_APPICON_NAME during Info.plist generation, which is off here.
+        CFBundleIconName: AppIcon
         CFBundleDocumentTypes:
           - CFBundleTypeName: PDF Document
             CFBundleTypeRole: Viewer
@@ -64,6 +84,17 @@ targets:
         UTImportedTypeDeclarations: []
     entitlements:
       path: PDFViewer/Resources/PDFViewer.entitlements
+      properties:
+        # App Sandbox is required for Mac App Store distribution and is good practice
+        # regardless of distribution channel.
+        com.apple.security.app-sandbox: true
+        # Grants access only to files the user explicitly picks: the Open panel,
+        # drag-and-drop, double-click/"Open With" in Finder, and the Open Recent menu.
+        # "read-write" is required because "Save a Copy" writes a new file to a
+        # user-picked location; the original opened file is never written to.
+        com.apple.security.files.user-selected.read-write: true
+        # Required for the native print dialog (File > Print / ⌘P).
+        com.apple.security.print: true
 
   PDFViewerTests:
     type: bundle.unit-test
@@ -75,6 +106,11 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.brueggemann.pdfviewer.tests
         GENERATE_INFOPLIST_FILE: YES
+        # The app target's PRODUCT_NAME is "PDF Viewer" (with a space), but XcodeGen derives
+        # TEST_HOST from the target name ("PDFViewer"), which no longer matches the built
+        # bundle. Point it at the real product explicitly.
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PDF Viewer.app/Contents/MacOS/PDF Viewer"
+        BUNDLE_LOADER: "$(TEST_HOST)"
     dependencies:
       - target: PDFViewer
 

@@ -81,6 +81,22 @@ struct ViewerToolbar: ToolbarContent {
             .help("Zoom")
             .accessibilityLabel(Text("Zoomstufe, \(zoomLabel)"))
             .accessibilityIdentifier("zoomMenu")
+
+            if state.isExporting {
+                ProgressView()
+                    .controlSize(.small)
+                    .help("Optimierter Export läuft…")
+            } else {
+                Button {
+                    state.exportOptimizedPDF()
+                } label: {
+                    Image(systemName: "doc.zipper")
+                }
+                .help("Optimiert exportieren (komprimiert, Text bleibt erhalten)")
+                .disabled(!state.canExportOptimized)
+                .accessibilityLabel(Text("Optimiert exportieren"))
+                .accessibilityIdentifier("optimizedExportButton")
+            }
         }
     }
 

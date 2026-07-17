@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# create-dmg.sh — packages dist/PDFViewer.app into an installable dist/PDFViewer.dmg
+# create-dmg.sh — packages dist/PDF Viewer.app into an installable dist/PDFViewer.dmg
 # containing the app and a symlink to /Applications, with a simple Finder layout.
 #
 # Uses only macOS built-in tools (hdiutil, osascript, iconutil/sips) — no third-party
@@ -9,14 +9,14 @@
 # Usage:
 #   scripts/create-dmg.sh
 #
-# Requires dist/PDFViewer.app to already exist (run scripts/build-release.sh first).
+# Requires dist/PDF Viewer.app to already exist (run scripts/build-release.sh first).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist"
-APP_PATH="${DIST_DIR}/PDFViewer.app"
+APP_PATH="${DIST_DIR}/PDF Viewer.app"
 VOLUME_NAME="PDF Viewer"
 DMG_PATH="${DIST_DIR}/PDFViewer.dmg"
 STAGING_DIR="$(mktemp -d /tmp/pdfviewer-dmg-staging.XXXXXX)"
@@ -27,12 +27,12 @@ cleanup() { rm -rf "${STAGING_DIR}"; }
 trap cleanup EXIT
 
 command -v hdiutil >/dev/null 2>&1 || fail "hdiutil not found — this script must run on macOS."
-[ -d "${APP_PATH}" ] || fail "dist/PDFViewer.app not found. Run scripts/build-release.sh first."
+[ -d "${APP_PATH}" ] || fail "dist/PDF Viewer.app not found. Run scripts/build-release.sh first."
 
 rm -f "${DMG_PATH}"
 
 log "Staging DMG contents"
-cp -R "${APP_PATH}" "${STAGING_DIR}/PDFViewer.app"
+cp -R "${APP_PATH}" "${STAGING_DIR}/PDF Viewer.app"
 ln -s /Applications "${STAGING_DIR}/Applications"
 
 # Optional custom volume icon, derived from the app's own icon if available.
@@ -83,7 +83,7 @@ tell application "Finder"
         set viewOptions to the icon view options of container window
         set arrangement of viewOptions to not arranged
         set icon size of viewOptions to 96
-        set position of item "PDFViewer.app" of container window to {140, 180}
+        set position of item "PDF Viewer.app" of container window to {140, 180}
         set position of item "Applications" of container window to {420, 180}
         close
     end tell

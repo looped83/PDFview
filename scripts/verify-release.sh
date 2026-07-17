@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# verify-release.sh — sanity-checks the built dist/PDFViewer.app (and dist/PDFViewer.dmg,
+# verify-release.sh — sanity-checks the built dist/PDF Viewer.app (and dist/PDFViewer.dmg,
 # if present): bundle structure, code signature, Gatekeeper assessment, and notarization
 # staple. Safe to run at any point in the release pipeline — checks that don't apply yet
 # (e.g. stapler validation before notarization) are reported, not treated as fatal.
@@ -12,7 +12,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-APP_PATH="${ROOT_DIR}/dist/PDFViewer.app"
+APP_PATH="${ROOT_DIR}/dist/PDF Viewer.app"
 DMG_PATH="${ROOT_DIR}/dist/PDFViewer.dmg"
 
 PASS=0
@@ -25,11 +25,11 @@ section() { printf '\n\033[1;34m%s\033[0m\n' "$1"; }
 
 section "Bundle structure"
 if [ -d "${APP_PATH}" ]; then
-  ok "dist/PDFViewer.app exists"
+  ok "dist/PDF Viewer.app exists"
   [ -f "${APP_PATH}/Contents/Info.plist" ] && ok "Info.plist present" || bad "Info.plist missing"
   [ -x "${APP_PATH}/Contents/MacOS/PDFViewer" ] && ok "Executable present and executable" || bad "Executable missing or not executable"
 else
-  bad "dist/PDFViewer.app not found — run scripts/build-release.sh first."
+  bad "dist/PDF Viewer.app not found — run scripts/build-release.sh first."
 fi
 
 section "Code signature"

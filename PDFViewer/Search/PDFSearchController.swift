@@ -101,8 +101,10 @@ final class PDFSearchController {
             queue: .main
         ) { [weak self] notification in
             guard let selection = notification.userInfo?["PDFDocumentFoundSelection"] as? PDFSelection else { return }
-            Task { @MainActor in
-                self?.results.append(selection)
+            // Delivery is on the main queue (see `queue: .main` above), so this is safe.
+            nonisolated(unsafe) let foundSelection = selection
+            MainActor.assumeIsolated {
+                self?.results.append(foundSelection)
             }
         }
         endObserver = center.addObserver(
@@ -110,7 +112,7 @@ final class PDFSearchController {
             object: document,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in
+            MainActor.assumeIsolated {
                 self?.isSearching = false
             }
         }
