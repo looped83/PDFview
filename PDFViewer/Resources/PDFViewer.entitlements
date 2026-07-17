@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- App Sandbox is required for Mac App Store distribution and is good practice
+	     regardless of distribution channel. -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+
+	<!-- Grants access only to files the user explicitly picks: the Open panel,
+	     drag-and-drop, double-click/"Open With" in Finder, and the Open Recent menu
+	     (itself backed by a system-managed security-scoped bookmark, so no app-owned
+	     bookmark entitlement is needed for Recent Documents to keep working).
+	     "read-write" (rather than "read-only") is required because "Save a Copy" writes
+	     a new file to a location the user picks via NSSavePanel; the original opened
+	     file is still never written to — viewing never mutates it. -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+
+	<!-- Required for the native print dialog (File > Print / ⌘P). -->
+	<key>com.apple.security.print</key>
+	<true/>
+</dict>
+</plist>
