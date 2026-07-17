@@ -16,11 +16,20 @@ final class WelcomeWindowController: NSWindowController {
         window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
-        // No frame autosave: a saved frame would override centering and reopen the welcome
-        // window wherever it last sat. We always want it centered on launch.
-        window.center()
+        // Give the window an explicit size up front so centering has a stable frame to
+        // work with. No frame autosave: a saved frame would override centering and reopen
+        // the welcome window wherever it last sat. We always want it centered on launch.
+        window.setContentSize(NSSize(width: 640, height: 460))
         self.init(window: window)
         observeDocumentWindows()
+    }
+
+    /// Centers only after the window is shown and laid out. Centering in `init` runs
+    /// before SwiftUI finalizes the content size, so the window would resize afterwards
+    /// and drift off-center.
+    override func showWindow(_ sender: Any?) {
+        super.showWindow(sender)
+        window?.center()
     }
 
     deinit {

@@ -62,7 +62,7 @@ an unreleased/internal build.
 
 ## 5. Build & package
 
-- [ ] `scripts/build-release.sh` → `dist/PDFViewer.app` produced.
+- [ ] `scripts/build-release.sh` → `dist/PDF Viewer.app` produced.
 - [ ] `scripts/create-dmg.sh` → `dist/PDFViewer.dmg` produced, contains the app and an
       `Applications` symlink, opens with a clean Finder layout.
 - [ ] `scripts/verify-release.sh` reports no failures.
@@ -71,10 +71,10 @@ an unreleased/internal build.
 
 - [ ] `DEVELOPER_ID_APPLICATION` set to a valid, non-expired identity.
 - [ ] `scripts/sign-app.sh` completes without error.
-- [ ] `codesign --verify --deep --strict --verbose=2 dist/PDFViewer.app` passes.
-- [ ] `spctl --assess --type execute --verbose dist/PDFViewer.app` passes.
+- [ ] `codesign --verify --deep --strict --verbose=2 dist/PDF Viewer.app` passes.
+- [ ] `spctl --assess --type execute --verbose dist/PDF Viewer.app` passes.
 - [ ] `scripts/notarize-app.sh` completes without error (Apple accepted the submission).
-- [ ] `xcrun stapler validate dist/PDFViewer.app` passes.
+- [ ] `xcrun stapler validate dist/PDF Viewer.app` passes.
 - [ ] DMG rebuilt *after* stapling, so it contains the stapled app: re-run
       `scripts/create-dmg.sh`.
 - [ ] On a different Mac (or a fresh user account) with no prior Gatekeeper exception:
@@ -83,7 +83,7 @@ an unreleased/internal build.
 
 ## 7. Final sanity pass
 
-- [ ] Launch `dist/PDFViewer.app` directly and confirm it opens, opens a PDF via drag-and-drop,
+- [ ] Launch `dist/PDF Viewer.app` directly and confirm it opens, opens a PDF via drag-and-drop,
       and quits cleanly.
 - [ ] Confirm no network requests are made (Little Snitch / Network Link Conditioner / a
       packet capture during normal use) — this app must work fully offline.

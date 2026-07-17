@@ -28,6 +28,8 @@ struct SidebarView: View {
                 OutlineSidebar(state: state)
             }
         }
-        .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 320)
+        // Fixed at the smallest width that fits the 150 pt thumbnails without clipping, so the
+        // sidebar always stays as narrow as possible and leaves maximum room for the page.
+        .navigationSplitViewColumnWidth(180)
     }
 }

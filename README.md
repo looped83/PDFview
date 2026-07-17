@@ -116,7 +116,7 @@ Das Skript:
 1. erzeugt das Xcode-Projekt neu (`xcodegen generate`),
 2. entfernt alte Build-Artefakte (`build/`, `dist/`),
 3. baut das Scheme `PDFViewer` in der Konfiguration `Release`,
-4. kopiert die erzeugte `PDFViewer.app` nach `dist/PDFViewer.app`,
+4. kopiert die erzeugte `PDF Viewer.app` nach `dist/PDF Viewer.app`,
 5. bricht bei jedem Fehler mit einem Exit-Code ungleich null ab.
 
 ## Tests ausführen
@@ -153,18 +153,18 @@ usw.) befindet sich in [`docs/release-checklist.md`](docs/release-checklist.md).
 ```sh
 scripts/build-release.sh
 ```
-→ `dist/PDFViewer.app`
+→ `dist/PDF Viewer.app`
 
 ## Erstellung der `.dmg`
 
 ```sh
 scripts/create-dmg.sh
 ```
-→ `dist/PDFViewer.dmg`, enthält `PDFViewer.app` und einen symbolischen Link
+→ `dist/PDFViewer.dmg`, enthält `PDF Viewer.app` und einen symbolischen Link
 auf `/Applications`, mit einfachem Finder-Icon-Layout. Verwendet ausschließlich
 Bordmittel (`hdiutil`, `osascript`, `iconutil`, `sips`) — kein Drittanbieter-Tool.
 
-Setzt eine bereits gebaute `dist/PDFViewer.app` voraus.
+Setzt eine bereits gebaute `dist/PDF Viewer.app` voraus.
 
 ## Code-Signing-Anleitung
 
@@ -194,12 +194,12 @@ export DEVELOPER_ID_APPLICATION="Developer ID Application: Dein Name (TEAMID1234
 scripts/sign-app.sh
 ```
 
-Das Skript signiert `dist/PDFViewer.app` mit Hardened Runtime, den
+Das Skript signiert `dist/PDF Viewer.app` mit Hardened Runtime, den
 Entitlements aus `PDFViewer/Resources/PDFViewer.entitlements`, einem
 Secure Timestamp, und verifiziert die Signatur anschließend automatisch mit:
 
 ```sh
-codesign --verify --deep --strict --verbose=2 dist/PDFViewer.app
+codesign --verify --deep --strict --verbose=2 dist/PDF Viewer.app
 ```
 
 ## Notarisierung

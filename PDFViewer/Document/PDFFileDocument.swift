@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import PDFKit
 import UniformTypeIdentifiers
@@ -21,10 +22,19 @@ final class PDFFileDocument: ReferenceFileDocument {
     static var readableContentTypes: [UTType] { [.pdf] }
     static var writableContentTypes: [UTType] { [.pdf] }
 
+    // SwiftUI calls `init(configuration:)` on a background "document opening" queue, so this
+    // type must NOT be `@MainActor` — that crashes on open. `ReferenceFileDocument` requires
+    // `Sendable`, which flags mutable `@Published` properties. Instead the state is stored in
+    // plain `nonisolated(unsafe)` properties (safe: fully initialized before the document
+    // escapes the opening queue; every later mutation and read is on the main thread) and
+    // change notifications are sent manually through `objectWillChange` so the SwiftUI views
+    // observing this document still refresh (e.g. after `unlock`).
     /// `nil` while the document is locked and awaiting a password.
-    @Published private(set) var pdfDocument: PDFKit.PDFDocument?
-    @Published private(set) var isLocked: Bool
-    @Published private(set) var loadError: PDFLoadError?
+    nonisolated(unsafe) private(set) var pdfDocument: PDFKit.PDFDocument?
+    nonisolated(unsafe) private(set) var isLocked: Bool
+    nonisolated(unsafe) private(set) var loadError: PDFLoadError?
+
+    nonisolated(unsafe) let objectWillChange = ObservableObjectPublisher()
 
     private let originalData: Data
 
@@ -78,6 +88,7 @@ final class PDFFileDocument: ReferenceFileDocument {
     func unlock(password: String) -> Bool {
         guard let locked = PDFKit.PDFDocument(data: originalData) else { return false }
         guard locked.unlock(withPassword: password) else { return false }
+        objectWillChange.send()
         isLocked = false
         pdfDocument = locked
         return true

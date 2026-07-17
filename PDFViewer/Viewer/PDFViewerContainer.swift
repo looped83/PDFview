@@ -73,6 +73,17 @@ struct PDFViewerContainer: View {
         } message: {
             Text(state.saveCopyErrorMessage ?? "")
         }
+        .alert(
+            "Optimierter Export fehlgeschlagen",
+            isPresented: Binding(
+                get: { state.exportErrorMessage != nil },
+                set: { if !$0 { state.exportErrorMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) { state.exportErrorMessage = nil }
+        } message: {
+            Text(state.exportErrorMessage ?? "")
+        }
     }
 
     private var sidebarVisibilityBinding: Binding<NavigationSplitViewVisibility> {

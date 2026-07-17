@@ -37,6 +37,8 @@ final class PDFDocumentState {
     var passwordAttemptFailed: Bool = false
 
     var saveCopyErrorMessage: String?
+    var exportErrorMessage: String?
+    var isExporting: Bool = false
 
     private(set) var navigationHistory = NavigationHistory()
     private var hasRestoredPosition = false
@@ -242,6 +244,61 @@ final class PDFDocumentState {
                 self?.saveCopyErrorMessage = String(
                     localized: "Die Kopie konnte nicht gespeichert werden."
                 )
+            }
+        }
+    }
+
+    /// Whether an optimized export is currently possible (a viewable document is loaded).
+    var canExportOptimized: Bool {
+        !isExporting && (pdfView?.document ?? fileDocument.pdfDocument) != nil
+    }
+
+    /// Exports a size-optimized copy: prompts for a destination, then re-compresses the
+    /// document's images in the background (see `PDFCompressionService`). Text stays intact.
+    func exportOptimizedPDF() {
+        guard canExportOptimized else { return }
+
+        let panel = NSSavePanel()
+        let baseName = fileURL?.deletingPathExtension().lastPathComponent
+            ?? String(localized: "Dokument")
+        panel.nameFieldStringValue = String(localized: "\(baseName) (komprimiert).pdf")
+        panel.allowedContentTypes = [.pdf]
+        panel.canCreateDirectories = true
+        panel.begin { [weak self] response in
+            guard let self, response == .OK, let destination = panel.url else { return }
+            self.runOptimizedExport(to: destination)
+        }
+    }
+
+    private func runOptimizedExport(to destination: URL) {
+        // Prefer the original file's bytes as the compression source (best quality input).
+        // For originally-encrypted documents those bytes are unreadable without the password,
+        // so fall back to the already-unlocked in-memory document's data.
+        let wasEncrypted = pdfView?.document?.isEncrypted ?? false
+        let sourceData: Data?
+        if let fileURL, !wasEncrypted {
+            sourceData = try? Data(contentsOf: fileURL)
+        } else {
+            sourceData = (pdfView?.document ?? fileDocument.pdfDocument)?.dataRepresentation()
+        }
+
+        guard let sourceData else {
+            exportErrorMessage = String(localized: "Der optimierte Export ist fehlgeschlagen.")
+            return
+        }
+
+        isExporting = true
+        Task.detached(priority: .userInitiated) { [weak self] in
+            do {
+                try PDFCompressionService.writeOptimizedPDF(sourceData: sourceData, to: destination)
+                await MainActor.run { self?.isExporting = false }
+            } catch {
+                await MainActor.run {
+                    self?.isExporting = false
+                    self?.exportErrorMessage = String(
+                        localized: "Der optimierte Export ist fehlgeschlagen."
+                    )
+                }
             }
         }
     }
