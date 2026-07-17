@@ -84,6 +84,20 @@ struct PDFViewerContainer: View {
         } message: {
             Text(state.exportErrorMessage ?? "")
         }
+        .alert(
+            "Optimierter Export",
+            isPresented: Binding(
+                get: { state.exportInfoMessage != nil },
+                set: { if !$0 { state.exportInfoMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) { state.exportInfoMessage = nil }
+        } message: {
+            Text(state.exportInfoMessage ?? "")
+        }
+        .sheet(isPresented: $state.isExportOptionsPresented) {
+            ExportOptionsView(state: state)
+        }
     }
 
     private var sidebarVisibilityBinding: Binding<NavigationSplitViewVisibility> {

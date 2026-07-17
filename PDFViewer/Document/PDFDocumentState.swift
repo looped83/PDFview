@@ -38,7 +38,10 @@ final class PDFDocumentState {
 
     var saveCopyErrorMessage: String?
     var exportErrorMessage: String?
+    var exportInfoMessage: String?
     var isExporting: Bool = false
+    var isExportOptionsPresented: Bool = false
+    var exportSettings = PDFExportSettings()
 
     private(set) var navigationHistory = NavigationHistory()
     private var hasRestoredPosition = false
@@ -253,9 +256,17 @@ final class PDFDocumentState {
         !isExporting && (pdfView?.document ?? fileDocument.pdfDocument) != nil
     }
 
-    /// Exports a size-optimized copy: prompts for a destination, then re-compresses the
-    /// document's images in the background (see `PDFCompressionService`). Text stays intact.
+    /// Entry point for the toolbar/menu: opens the export-options sheet where the user picks
+    /// the method (preserve text vs. rasterize) and compression strength before saving.
     func exportOptimizedPDF() {
+        guard canExportOptimized else { return }
+        isExportOptionsPresented = true
+    }
+
+    /// Called by the options sheet once the user confirms: prompts for a destination, then
+    /// exports with the chosen `exportSettings` in the background (see `PDFCompressionService`).
+    func confirmOptimizedExport() {
+        isExportOptionsPresented = false
         guard canExportOptimized else { return }
 
         let panel = NSSavePanel()
@@ -288,10 +299,14 @@ final class PDFDocumentState {
         }
 
         isExporting = true
+        let settings = exportSettings
         Task.detached(priority: .userInitiated) { [weak self] in
             do {
-                try PDFCompressionService.writeOptimizedPDF(sourceData: sourceData, to: destination)
-                await MainActor.run { self?.isExporting = false }
+                let result = try PDFCompressionService.writeOptimizedPDF(sourceData: sourceData, to: destination, settings: settings)
+                await MainActor.run {
+                    self?.isExporting = false
+                    self?.exportInfoMessage = Self.message(for: result)
+                }
             } catch {
                 await MainActor.run {
                     self?.isExporting = false
@@ -300,6 +315,21 @@ final class PDFDocumentState {
                     )
                 }
             }
+        }
+    }
+
+    private static func message(for result: PDFCompressionService.Result) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        switch result {
+        case let .compressed(originalBytes, optimizedBytes):
+            let percent = Int((1 - Double(optimizedBytes) / Double(originalBytes)) * 100)
+            let from = formatter.string(fromByteCount: Int64(originalBytes))
+            let to = formatter.string(fromByteCount: Int64(optimizedBytes))
+            return String(localized: "Exportiert: \(from) → \(to) (\(percent) % kleiner).")
+        case let .alreadyOptimal(bytes):
+            let size = formatter.string(fromByteCount: Int64(bytes))
+            return String(localized: "Diese PDF war bereits optimal komprimiert (\(size)); das Original wurde unverändert exportiert.")
         }
     }
 

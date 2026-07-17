@@ -63,6 +63,71 @@ enum ZoomMode: Equatable {
     }
 }
 
+/// How an optimized export re-encodes the document.
+enum ExportMethod: String, CaseIterable, Identifiable {
+    /// Recompress embedded images via a Quartz filter; vector text stays selectable.
+    case preserveText
+    /// Rasterize each page to a JPEG image — loses text selection but reaches the
+    /// smallest sizes, ideal for scans or image-only documents.
+    case rasterize
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .preserveText: String(localized: "Text erhalten")
+        case .rasterize: String(localized: "Maximale Verkleinerung")
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .preserveText:
+            String(localized: "Bilder werden komprimiert, Text bleibt auswähl- und durchsuchbar.")
+        case .rasterize:
+            String(localized: "Jede Seite wird als Bild gespeichert – deutlich kleiner, aber Text ist nicht mehr auswählbar.")
+        }
+    }
+}
+
+/// Compression strength preset, mapped to a target image resolution and JPEG quality.
+enum ExportQuality: String, CaseIterable, Identifiable {
+    case high
+    case balanced
+    case strong
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .high: String(localized: "Hoch")
+        case .balanced: String(localized: "Ausgewogen")
+        case .strong: String(localized: "Stark komprimiert")
+        }
+    }
+
+    var dpi: Int {
+        switch self {
+        case .high: 200
+        case .balanced: 150
+        case .strong: 110
+        }
+    }
+
+    var jpegQuality: Double {
+        switch self {
+        case .high: 0.80
+        case .balanced: 0.72
+        case .strong: 0.55
+        }
+    }
+}
+
+struct PDFExportSettings: Equatable {
+    var method: ExportMethod = .preserveText
+    var quality: ExportQuality = .balanced
+}
+
 enum SidebarMode: String, CaseIterable, Identifiable {
     case thumbnails
     case outline
