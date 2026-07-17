@@ -16,8 +16,9 @@ final class WelcomeWindowController: NSWindowController {
         window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
+        // No frame autosave: a saved frame would override centering and reopen the welcome
+        // window wherever it last sat. We always want it centered on launch.
         window.center()
-        window.setFrameAutosaveName("WelcomeWindow")
         self.init(window: window)
         observeDocumentWindows()
     }

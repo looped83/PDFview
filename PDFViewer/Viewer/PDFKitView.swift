@@ -118,6 +118,16 @@ struct PDFKitView: NSViewRepresentable {
 
         private func subscribeToNotifications(for view: PDFView) {
             let center = NotificationCenter.default
+            // Fit-based zoom (`.fitPage`/`.fitWidth`) is resolved against the view's bounds,
+            // which are still zero at first layout and change on every window resize. SwiftUI
+            // only re-runs `updateNSView` on state changes, not on AppKit layout, so without
+            // this the page opens at the fallback scale (actual size, showing only a corner)
+            // and never re-fits when the window resizes. Re-apply fit zoom whenever the frame
+            // changes so the whole page stays visible.
+            view.postsFrameChangedNotifications = true
+            notificationTokens.append(center.addObserver(forName: NSView.frameDidChangeNotification, object: view, queue: .main) { [weak self] _ in
+                Task { @MainActor in self?.handleFrameChanged() }
+            })
             notificationTokens.append(center.addObserver(forName: .PDFViewPageChanged, object: view, queue: .main) { [weak self] _ in
                 Task { @MainActor in self?.handlePageChanged() }
             })
@@ -127,6 +137,11 @@ struct PDFKitView: NSViewRepresentable {
             notificationTokens.append(center.addObserver(forName: .PDFViewDocumentChanged, object: view, queue: .main) { [weak self] _ in
                 Task { @MainActor in self?.handleDocumentChanged() }
             })
+        }
+
+        private func handleFrameChanged() {
+            guard let pdfView, let state, state.zoomMode.isFitBased else { return }
+            applyZoom(state.zoomMode, to: pdfView, state: state)
         }
 
         private func handlePageChanged() {

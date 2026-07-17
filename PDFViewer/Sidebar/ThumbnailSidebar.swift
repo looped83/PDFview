@@ -111,7 +111,12 @@ private struct ThumbnailRow: View {
         guard let page = document.page(at: index) else { return }
         await Task.yield()
         guard !Task.isCancelled else { return }
-        let generated = page.thumbnail(of: Self.thumbnailSize, for: .mediaBox)
+        // Render at the display's backing scale (2x/3x on Retina) so the bitmap has enough
+        // pixels for the size it's shown at; rendering at point size looks blurry when the
+        // system upscales it to the physical resolution.
+        let scale = max(NSScreen.main?.backingScaleFactor ?? 2, 2)
+        let pixelSize = CGSize(width: Self.thumbnailSize.width * scale, height: Self.thumbnailSize.height * scale)
+        let generated = page.thumbnail(of: pixelSize, for: .mediaBox)
         guard !Task.isCancelled else { return }
         cache.setObject(generated, forKey: key)
         image = generated

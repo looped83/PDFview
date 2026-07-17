@@ -15,6 +15,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ProcessInfo.processInfo.environment["UITEST_PDF_PATH"].map(URL.init(fileURLWithPath:))
     }
 
+    /// Suppresses AppKit's default "show the Open panel at launch" behavior for
+    /// document-based apps (governed by `NSShowAppCentricOpenPanelInsteadOfUntitledFile`,
+    /// which modern macOS treats as enabled by default). Without this, an Open dialog
+    /// appears behind our welcome window on every launch. Turning it off routes launch
+    /// through `applicationShouldOpenUntitledFile`, where we show the welcome window
+    /// instead. Must run before AppKit makes the launch decision, hence `willFinishLaunching`.
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        UserDefaults.standard.register(
+            defaults: ["NSShowAppCentricOpenPanelInsteadOfUntitledFile": false]
+        )
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSWindow.allowsAutomaticWindowTabbing = true
         if let uiTestFixtureURL {

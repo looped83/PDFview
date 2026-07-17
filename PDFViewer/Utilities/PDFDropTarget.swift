@@ -14,9 +14,15 @@ private struct PDFDropModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onDrop(of: [.pdf], isTargeted: $isTargeted) { providers in
-                handleDrop(providers)
-                return true
+            // `dropDestination(for: URL.self)` decodes file-URL drags directly and delivers
+            // the resolved URLs on the main actor. A file dragged from Finder is registered
+            // under its file type (e.g. `com.adobe.pdf`), which the older
+            // `loadObject(ofClass: URL.self)` path failed to vend as a URL — so drops silently
+            // did nothing. `DocumentOpener.open` filters to PDFs, so non-PDF drops are ignored.
+            .dropDestination(for: URL.self) { urls, _ in
+                DocumentOpener.open(urls: urls)
+            } isTargeted: { targeted in
+                isTargeted = targeted
             }
             .overlay {
                 if isTargeted {
@@ -26,19 +32,5 @@ private struct PDFDropModifier: ViewModifier {
                         .allowsHitTesting(false)
                 }
             }
-    }
-
-    /// Each dropped item is opened independently as soon as it resolves, rather than
-    /// collected into a shared array first — `loadObject` callbacks can fire on
-    /// arbitrary queues, so this sidesteps any cross-thread mutable state entirely.
-    private func handleDrop(_ providers: [NSItemProvider]) {
-        for provider in providers {
-            _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                guard let url else { return }
-                Task { @MainActor in
-                    DocumentOpener.open(urls: [url])
-                }
-            }
-        }
     }
 }
